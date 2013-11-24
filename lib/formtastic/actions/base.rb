@@ -21,7 +21,7 @@ module Formtastic
       end
       
       def wrapper(&block)
-        template.content_tag(:li, 
+        template.content_tag(:div, 
           template.capture(&block), 
           wrapper_html_options
         )
@@ -96,7 +96,7 @@ module Formtastic
       end
       
       def default_button_html
-        { :accesskey => accesskey }
+        { :accesskey => accesskey, :class => "btn btn-default btn-primary" }
       end
       
       def accesskey

@@ -95,7 +95,7 @@ module Formtastic
             fragments_wrapping do
               hidden_fragments <<
               fragments_label <<
-              template.content_tag(:ol,
+              template.content_tag(:div,
                 fragments.map do |fragment|
                   fragment_wrapping do
                     fragment_label_html(fragment) <<
@@ -125,7 +125,7 @@ module Formtastic
         end
         
         def fragment_wrapping(&block)
-          template.content_tag(:li, template.capture(&block), fragment_wrapping_html_options)
+          template.content_tag(:div, template.capture(&block), fragment_wrapping_html_options)
         end
         
         def fragment_wrapping_html_options
@@ -196,10 +196,7 @@ module Formtastic
         end
         
         def fragments_wrapping(&block)
-          template.content_tag(:fieldset,
-            template.capture(&block).html_safe, 
-            fragments_wrapping_html_options
-          )
+          template.capture(&block).html_safe
         end
         
         def fragments_wrapping_html_options
@@ -208,17 +205,16 @@ module Formtastic
         
         def fragments_label
           if render_label?
-            template.content_tag(:legend, 
-              builder.label(method, label_text, :for => fragment_id(fragments.first)), 
-              :class => "label"
-            )
+            params = {:for => fragment_id(fragments.first)}
+            params[:class] = 'required' if required?
+            builder.label(method, label_text, params)
           else
             "".html_safe
           end
         end
         
         def fragments_inner_wrapping(&block)
-          template.content_tag(:ol,
+          template.content_tag(:div,
             template.capture(&block)
           )
         end

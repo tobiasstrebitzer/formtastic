@@ -10,10 +10,11 @@ module Formtastic
         end
         
         def label_html_options
-          {
-            :for => input_html_options[:id],
-            :class => ['label'],
+          params = {
+            :for => input_html_options[:id]
           }
+          params[:class] = 'required' if required?
+          params
         end
         
         def label_text

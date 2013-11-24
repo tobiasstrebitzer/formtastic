@@ -22,7 +22,8 @@ module Formtastic
           { 
             :id => dom_id,
             :required => required_attribute?,
-            :autofocus => autofocus?
+            :autofocus => autofocus?,
+            :class => 'form-control'
           }.merge(options[:input_html] || {})
         end
         
