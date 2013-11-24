@@ -56,7 +56,7 @@ module Formtastic
       # excluding (blacklist).
       def label_html_options
         prev = super
-        prev[:class] = prev[:class] - ['label']
+        prev[:class] = !prev[:class].nil? ? prev[:class] - ['label'] : ""
         
         input_html_options.merge(
           prev.merge(
