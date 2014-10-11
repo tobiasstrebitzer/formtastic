@@ -51,9 +51,6 @@ module Formtastic
         )
       end
       
-      # TODO: why are we merging `input_html_options` and then making some of the irrelevant ones `nil`?
-      # Seems like we should be selectively including from input_html_options (a whitelist) instead of 
-      # excluding (blacklist).
       def label_html_options
         prev = super
         # prev[:class] = !prev[:class].nil? ? prev[:class] - ['label'] : ""
@@ -113,7 +110,7 @@ module Formtastic
         when NilClass
           false
         when Integer
-          value != 0
+          value == checked_value.to_i
         when String
           value == checked_value
         when Array

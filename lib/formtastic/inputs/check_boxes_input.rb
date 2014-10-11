@@ -46,6 +46,9 @@ module Formtastic
     #   <%= f.input :categories, :as => :check_boxes, :collection => [["Ruby", 1], ["Rails", 2]] %>
     #   <%= f.input :categories, :as => :check_boxes, :collection => [["Ruby", 1, {'data-attr' => 'attr-value'}]] %>
     #   <%= f.input :categories, :as => :check_boxes, :collection => 1..5 %>
+    #   <%= f.input :categories, :as => :check_boxes, :collection => [:ruby, :rails] %>
+    #   <%= f.input :categories, :as => :check_boxes, :collection => [["Ruby", :ruby], ["Rails", :rails]] %>
+    #   <%= f.input :categories, :as => :check_boxes, :collection => Set.new([:ruby, :rails]) %>
     #
     # @example `:hidden_fields` can be used to skip Rails' rendering of a hidden field before every checkbox
     #   <%= f.input :categories, :as => :check_boxes, :hidden_fields => false %>
@@ -100,18 +103,16 @@ module Formtastic
       end
 
       def choice_html(choice)
-        template.content_tag(:label,
-          hidden_fields? ?
-            check_box_with_hidden_input(choice) :
-            check_box_without_hidden_input(choice) <<
-          choice_label(choice),
+        template.content_tag(
+          :label,
+          checkbox_input(choice) + choice_label(choice),
           label_html_options.merge(:for => choice_input_dom_id(choice), :class => nil)
         )
       end
 
       def hidden_field_for_all
         if hidden_fields?
-          ""
+          ''
         else
           options = {}
           options[:class] = [method.to_s.singularize, 'default'].join('_') if value_as_class?
@@ -180,9 +181,20 @@ module Formtastic
 
       protected
 
+      def checkbox_input(choice)
+        if hidden_fields?
+          check_box_with_hidden_input(choice)
+        else
+          check_box_without_hidden_input(choice)
+        end
+      end
+
       def make_selected_values
         if object.respond_to?(method)
-          selected_items = [object.send(method)].compact.flatten
+          selected_items = object.send(method)
+
+          # Construct an array from the return value, regardless of the return type
+          selected_items = [*selected_items].compact.flatten
 
           [*selected_items.map { |o| send_or_call_or_object(value_method, o) }].compact
         else

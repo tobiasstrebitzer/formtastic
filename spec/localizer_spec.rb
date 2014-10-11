@@ -16,8 +16,8 @@ describe 'Formtastic::Localizer' do
     end
     
     it "should check if key exists?" do
-      @cache.has_key?(@key).should be_true
-      @cache.has_key?(@undefined_key).should be_false
+      @cache.has_key?(@key).should be_truthy
+      @cache.has_key?(@undefined_key).should be_falsey
     end
     
     it "should set a key" do
@@ -53,7 +53,7 @@ describe 'Formtastic::Localizer' do
     end
     
     it "should be defined" do
-      lambda { Formtastic::Localizer }.should_not raise_error(::NameError)
+      lambda { Formtastic::Localizer }.should_not raise_error
     end
     
     it "should have a cache" do
@@ -101,6 +101,28 @@ describe 'Formtastic::Localizer' do
           end
         end
       end
+
+      describe "with custom resource name" do
+        before do
+          ::I18n.backend.store_translations :en, {:formtastic => {
+              :labels => {
+                :post => { :name => 'POST.NAME' },
+                :message => { :name => 'MESSAGE.NAME' }
+              }
+            }
+          }
+
+          with_config :i18n_lookups_by_default, true do
+            semantic_form_for(@new_post, :as => :message) do |builder|
+              @localizer = Formtastic::Localizer.new(builder)
+            end
+          end
+        end
+
+        it "should translate custom key with i18n" do
+          @localizer.localize(:name, :name, :label).should == 'MESSAGE.NAME'
+        end
+      end 
     end
 
   end

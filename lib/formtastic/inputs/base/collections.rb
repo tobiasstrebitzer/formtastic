@@ -48,7 +48,7 @@ module Formtastic
 
         def collection
           # Return if we have a plain string
-          return raw_collection if raw_collection.instance_of?(String) || raw_collection.instance_of?(ActiveSupport::SafeBuffer)
+          return raw_collection if raw_collection.is_a?(String)
 
           # Return if we have an Array of strings, fixnums or arrays
           return raw_collection if (raw_collection.instance_of?(Array) || raw_collection.instance_of?(Range)) &&
@@ -78,28 +78,16 @@ module Formtastic
                     ) if reflection.options[:polymorphic] == true
             end
 
-            find_options_from_options = options[:find_options] || {}
-            conditions_from_options = find_options_from_options[:conditions] || {}
             conditions_from_reflection = (reflection.respond_to?(:options) && reflection.options[:conditions]) || {}
             conditions_from_reflection = conditions_from_reflection.call if conditions_from_reflection.is_a?(Proc)
 
             scope_conditions = conditions_from_reflection.empty? ? nil : {:conditions => conditions_from_reflection}
-            if conditions_from_options.any?
-              if Util.rails3?
-                reflection.klass.scoped(scope_conditions).where(conditions_from_options)
-              else
-                reflection.klass.where(scope_conditions[:conditions]).where(conditions_from_options)
-              end
+            where_conditions = (scope_conditions && scope_conditions[:conditions]) || {}
+            
+            if Util.rails3?
+              reflection.klass.scoped(scope_conditions).where({}) # where is uneccessary, but keeps the stubbing simpler while we support rails3
             else
-              
-              if Util.rails3?
-                find_options_from_options.merge!(:include => group_by) if self.respond_to?(:group_by) && group_by
-                reflection.klass.scoped(scope_conditions).where(find_options_from_options)
-              else
-                coll = reflection.klass.where(scope_conditions)
-                coll = coll.includes(group_by) if self.respond_to?(:group_by) && group_by
-                coll.where(find_options_from_options)
-              end
+              reflection.klass.where(where_conditions)
             end
           end
         end
@@ -124,7 +112,7 @@ module Formtastic
         # Avoids an issue where `send_or_call` can be a String and duck can be something simple like
         # `:first`, which obviously String responds to.
         def send_or_call_or_object(duck, object)
-          return object if object.is_a?(String) || object.is_a?(Integer) # TODO what about other classes etc?
+          return object if object.is_a?(String) || object.is_a?(Integer) || object.is_a?(Symbol) # TODO what about other classes etc?
           send_or_call(duck, object)
         end
 

@@ -6,7 +6,9 @@ module Formtastic
     autoload :Basic
     autoload :BooleanInput
     autoload :CheckBoxesInput
+    autoload :ColorInput
     autoload :CountryInput
+    autoload :DatalistInput
     autoload :DateInput
     autoload :DatePickerInput
     autoload :DatetimePickerInput

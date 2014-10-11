@@ -31,13 +31,13 @@ module CustomMacros
         output_buffer.should have_tag("form li fieldset")
       end
     end
-    
+
     def it_should_have_a_nested_fieldset_with_class(klass)
       it "should have a nested_fieldset with class #{klass}" do
         output_buffer.should have_tag("form li fieldset.#{klass}")
       end
     end
-    
+
     def it_should_have_a_nested_ordered_list_with_class(klass)
       it "should have a nested fieldset with class #{klass}" do
         output_buffer.should have_tag("form li ol.#{klass}")
@@ -55,7 +55,7 @@ module CustomMacros
         output_buffer.should have_tag("form li label.label[@for='#{element_id}']")
       end
     end
-    
+
     def it_should_have_an_inline_label_for(element_id)
       it "should have a label for ##{element_id}" do
         output_buffer.should have_tag("form li label[@for='#{element_id}']")
@@ -71,6 +71,24 @@ module CustomMacros
     def it_should_have_select_with_id(element_id)
       it "should have a select box with id '#{element_id}'" do
         output_buffer.should have_tag("form li select##{element_id}")
+      end
+    end
+
+    # TODO use for many of the other macros
+    def it_should_have_tag_with(type, attribute_value_hash)
+      attribute_value_hash.each do |attribute, value|
+        it "should have a #{type} box with #{attribute} '#{value}'" do
+          output_buffer.should have_tag("form li #{type}[@#{attribute}=\"#{value}\"]")
+        end
+      end
+    end
+    def it_should_have_input_with(attribute_value_hash)
+      it_should_have_tag_with(:input, attribute_value_hash)
+    end
+
+    def it_should_have_many_tags(type, count)
+      it "should have #{count} #{type} tags" do
+        output_buffer.should have_tag("form li #{type}", count: count)
       end
     end
 
@@ -162,7 +180,7 @@ module CustomMacros
     def it_should_use_column_size_for_columns_shorter_than_default_text_field_size(as)
       it 'should use the column size for columns shorter than default_text_field_size' do
         column_limit_shorted_than_default = 1
-        @new_post.stub!(:column_for_attribute).and_return(mock('column', :type => as, :limit => column_limit_shorted_than_default))
+        @new_post.stub(:column_for_attribute).and_return(double('column', :type => as, :limit => column_limit_shorted_than_default))
 
         concat(semantic_form_for(@new_post) do |builder|
           concat(builder.input(:title, :as => as))
@@ -176,12 +194,12 @@ module CustomMacros
       describe 'when there are errors on the object for this method' do
         before do
           @title_errors = ['must not be blank', 'must be longer than 10 characters', 'must be awesome']
-          @errors = mock('errors')
-          @errors.stub!(:[]).with(errors_matcher(:title)).and_return(@title_errors)
+          @errors = double('errors')
+          @errors.stub(:[]).with(errors_matcher(:title)).and_return(@title_errors)
           Formtastic::FormBuilder.file_metadata_suffixes.each do |suffix|
-            @errors.stub!(:[]).with(errors_matcher("title_#{suffix}".to_sym)).and_return(nil)
+            @errors.stub(:[]).with(errors_matcher("title_#{suffix}".to_sym)).and_return(nil)
           end
-          @new_post.stub!(:errors).and_return(@errors)
+          @new_post.stub(:errors).and_return(@errors)
         end
 
         it 'should apply an errors class to the list item' do
@@ -258,8 +276,11 @@ module CustomMacros
 
     def it_should_call_find_on_association_class_when_no_collection_is_provided(as)
       it "should call find on the association class when no collection is provided" do
-        ::Author.should_receive(:where)
-
+        if Formtastic::Util.rails3?
+          ::Author.should_receive(:scoped)
+        else
+          ::Author.should_receive(:where)
+        end
         concat(semantic_form_for(@new_post) do |builder|
           concat(builder.input(:author, :as => as))
         end)
@@ -299,7 +320,7 @@ module CustomMacros
 
           if as == :radio
             it 'should generate a sanitized label for attribute' do
-              @bob.stub!(:category_name).and_return(@categories)
+              @bob.stub(:category_name).and_return(@categories)
               concat(semantic_form_for(@new_post) do |builder|
                 fields = builder.semantic_fields_for(@bob) do |bob_builder|
                   concat(bob_builder.input(:category_name, :as => as, :collection => @categories))
@@ -456,8 +477,8 @@ module CustomMacros
 
             describe "when the collection objects respond to #{label_method}" do
               before do
-                @fred.stub!(:respond_to?).and_return { |m| m.to_s == label_method || m.to_s == 'id' }
-                [@fred, @bob].each { |a| a.stub!(label_method).and_return('The Label Text') }
+                @fred.stub(:respond_to?) { |m| m.to_s == label_method || m.to_s == 'id' }
+                [@fred, @bob].each { |a| a.stub(label_method).and_return('The Label Text') }
 
                 concat(semantic_form_for(@new_post) do |builder|
                   concat(builder.input(:author, :as => as))
